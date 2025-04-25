@@ -2,67 +2,67 @@ import requests
 from datetime import datetime
 import os
 
-apiKey = os.getenv("STEAM_WEB_API_KEY")
-publicUserSteamId = "76561198310145074"
+api_key = os.getenv("STEAM_WEB_API_KEY")
+public_user_steam_id = "76561198310145074"
 
-isVanity = False
-vanityTestList = list(publicUserSteamId)
+is_vanity = False
+vanity_test_list = list(public_user_steam_id)
 
-if len(vanityTestList) != 17:
-    isVanity = True
+if len(vanity_test_list) != 17:
+    is_vanity = True
 else:
-    for char in vanityTestList:
+    for char in vanity_test_list:
         if not char.isnumeric():
-            isVanity = True
+            is_vanity = True
             break
 
-vanityUrl = f"http://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key={apiKey}&vanityurl={publicUserSteamId}"
+vanity_url = f"http://api.steampowered.com/ISteamUser/Resolvevanity_url/v0001/?key={api_key}&vanity_url={public_user_steam_id}"
 
-if isVanity:
-    response = requests.get(vanityUrl)
-    userSteamId = response.json()["response"]["steamid"]
+if is_vanity:
+    response = requests.get(vanity_url)
+    user_steam_id = response.json()["response"]["steamid"]
 else:
-    userSteamId = publicUserSteamId
+    user_steam_id = public_user_steam_id
 
-urlAcc = f"http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key={apiKey}&steamids={userSteamId}"
-urlOwnedGames = f"https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key={apiKey}&steamid={userSteamId}"
+url_acc = f"http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key={api_key}&steamids={user_steam_id}"
+url_owned_games = f"https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key={api_key}&steamid={user_steam_id}"
 
-responseAcc = requests.get(urlAcc)
-dataAcc = responseAcc.json()
+response_acc = requests.get(url_acc)
+data_acc = response_acc.json()
 
-responseOwnedGames = requests.get(urlOwnedGames)
-dataOwnedGames = responseOwnedGames.json()
+response_owned_games = requests.get(url_owned_games)
+data_owned_games = response_owned_games.json()
 
-print(f"publicid: {publicUserSteamId}")
+print(f"publicid: {public_user_steam_id}")
 
-colList = ["steamid", "personaname", "personastate", "gameid"]
+col_list = ["steamid", "personaname", "personastate", "gameid"]
 
-for col in colList:
+for col in col_list:
     try:
-        value = dataAcc["response"]["players"][0][col]
+        value = data_acc["response"]["players"][0][col]
         print(f"{col}: {value}")
     except KeyError:
         print(f"{col}: none")
 
-lastOnlineTime = datetime.fromtimestamp(dataAcc["response"]["players"][0]["lastlogoff"]).strftime("%Y-%m-%d %H:%M:%S")
-print(f"lastonline: {lastOnlineTime}")
+last_online_time = datetime.fromtimestamp(data_acc["response"]["players"][0]["lastlogoff"]).strftime("%Y-%m-%d %H:%M:%S")
+print(f"lastonline: {last_online_time}")
 
-games = dataOwnedGames["response"]["games"]
+games = data_owned_games["response"]["games"]
 
-playedGames = []
+played_games = []
 i = 0
 for game in games:
-    if dataOwnedGames["response"]["games"][i]["rtime_last_played"] > 0:
-        playedGames.append(game)
+    if data_owned_games["response"]["games"][i]["rtime_last_played"] > 0:
+        played_games.append(game)
     i += 1
 
-playedGames.sort(key=lambda x: x['rtime_last_played'], reverse=True)
+played_games.sort(key=lambda x: x['rtime_last_played'], reverse=True)
 
-if playedGames:
-    lastGame = playedGames[0]
-    lastPlayedTime = datetime.fromtimestamp(lastGame['rtime_last_played']).strftime('%Y-%m-%d %H:%M:%S')
-    print(f"lastplayed: {lastPlayedTime}")
-    if lastPlayedTime > lastOnlineTime:
+if played_games:
+    last_game = played_games[0]
+    last_played_time = datetime.fromtimestamp(last_game['rtime_last_played']).strftime('%Y-%m-%d %H:%M:%S')
+    print(f"lastplayed: {last_played_time}")
+    if last_played_time > last_online_time:
         print("user faked offline")
     else:
         print("user is honest")
